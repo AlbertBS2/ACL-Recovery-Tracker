@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 
 
 # Load environment variables
-load_dotenv(".env_supabase")
+#load_dotenv(".env_supabase")
 
 # Set web app title
 st.title("ACL Recovery Tracker")
@@ -24,7 +24,8 @@ with st.form("daily_log"):
 if submit:
     with st.spinner("Saving to database..."):
         # Create connection string for supabase
-        db_url = f"postgresql://{os.environ['DB_USER']}:{os.environ['DB_PASS']}@{os.environ['DB_HOST']}:{os.environ['DB_PORT']}/{os.environ['DB_NAME']}"
+        #db_url = f"postgresql://{os.environ['DB_USER']}:{os.environ['DB_PASS']}@{os.environ['DB_HOST']}:{os.environ['DB_PORT']}/{os.environ['DB_NAME']}"
+        db_url = f"postgresql://{st.secrets['DB_USER']}:{st.secrets['DB_PASS']}@{st.secrets['DB_HOST']}:{st.secrets['DB_PORT']}/{st.secrets['DB_NAME']}"
 
         # Create sqlalchemy engine
         engine = create_engine(db_url)
