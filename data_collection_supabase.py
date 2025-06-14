@@ -1,7 +1,5 @@
 import streamlit as st
 from datetime import date
-from dotenv import load_dotenv
-import os
 from sqlalchemy import create_engine, text
 
 
