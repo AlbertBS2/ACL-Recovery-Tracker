@@ -1,28 +1,33 @@
 import streamlit as st
-from datetime import date
+from datetime import date, datetime, time
 from sqlalchemy import create_engine, text
-
-
-# Load environment variables
-#load_dotenv(".env_supabase")
 
 # Set web app title
 st.title("ACL Recovery Tracker")
 
+log_date = st.date_input("Date")
+log_time = st.time_input("Time")
+
 # Form
 with st.form("daily_log"):
-    log_date = st.date_input("Date", date.today())
-    pain = st.slider("Pain Level (0-10)", 0, 10)
+
+    if log_time < time(12, 0):
+        sleep_hours = st.number_input("Sleep time (hours)", 0.00, 24.00)
+    else:
+        sleep_hours = None
+
+    pain = st.slider("Pain level (0-10)", 0, 10)
     flexion = st.number_input("Extension (degrees)", -10, 0)
-    mood = st.selectbox("Mood", ["Happy", "Neutral", "Low"])
-    rehab_done = st.checkbox("Rehab completed")
+    swelling = st.select_slider("Swelling level", ["None", "Mild", "Moderate", "Severe"])
+    painkillers = st.checkbox("Painkillers")
+    rehab_done = st.checkbox("Rehab done")
+    mood = st.select_slider("Mood", ["Happy", "Neutral", "Low"])
     notes = st.text_area("Notes:")
     submit = st.form_submit_button("Submit")
 
 if submit:
     with st.spinner("Saving to database..."):
         # Create connection string for supabase
-        #db_url = f"postgresql://{os.environ['DB_USER']}:{os.environ['DB_PASS']}@{os.environ['DB_HOST']}:{os.environ['DB_PORT']}/{os.environ['DB_NAME']}"
         db_url = f"postgresql://{st.secrets['DB_USER']}:{st.secrets['DB_PASS']}@{st.secrets['DB_HOST']}:{st.secrets['DB_PORT']}/{st.secrets['DB_NAME']}"
 
         # Create sqlalchemy engine
@@ -33,16 +38,20 @@ if submit:
             f"""
             INSERT INTO logs
             VALUES
-            (:log_date, :pain, :flexion, :mood, :rehab_done, :notes);
+            (:date, :time, :sleep_hours, :pain, :flexion, :swelling, :painkillers, :rehab_done, :mood, :notes);
             """
         )
         
         params = {
-            "log_date": log_date,
+            "date": log_date,
+            "time": log_time,
+            "sleep_hours": sleep_hours,
             "pain": pain,
             "flexion": flexion,
-            "mood": mood,
+            "swelling": swelling,
+            "painkillers": painkillers,
             "rehab_done": rehab_done,
+            "mood": mood,
             "notes": notes
         }
 
