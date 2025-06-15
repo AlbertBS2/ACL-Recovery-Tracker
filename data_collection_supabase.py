@@ -16,8 +16,13 @@ with st.form("daily_log"):
     else:
         sleep_hours = None
 
+    if log_time > time(19, 0):
+        steps_walked = st.number_input("Steps walked", 0, 100000, value=5000)
+    else:
+        steps_walked = None
+
     pain = st.slider("Pain level (0-10)", 0, 10)
-    flexion = st.number_input("Extension (degrees)", -10, 0)
+    #flexion = st.number_input("Extension (degrees)", -10, 0)
     swelling = st.select_slider("Swelling level", ["None", "Mild", "Moderate", "Severe"])
     painkillers = st.checkbox("Painkillers")
     rehab_done = st.checkbox("Rehab done")
@@ -38,7 +43,7 @@ if submit:
             f"""
             INSERT INTO logs
             VALUES
-            (:date, :time, :sleep_hours, :pain, :flexion, :swelling, :painkillers, :rehab_done, :mood, :notes);
+            (:date, :time, :sleep_hours, :steps_walked, :pain, :flexion, :swelling, :painkillers, :rehab_done, :mood, :notes);
             """
         )
         
@@ -46,8 +51,9 @@ if submit:
             "date": log_date,
             "time": log_time,
             "sleep_hours": sleep_hours,
+            "steps_walked": steps_walked,
             "pain": pain,
-            "flexion": flexion,
+            #"flexion": flexion,
             "swelling": swelling,
             "painkillers": painkillers,
             "rehab_done": rehab_done,
