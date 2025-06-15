@@ -12,7 +12,7 @@ log_time = st.time_input("Time")
 with st.form("daily_log"):
 
     if log_time < time(12, 0):
-        sleep_hours = st.number_input("Sleep time (hours)", 0.00, 24.00)
+        sleep_hours = st.number_input("Sleep time (hours)", 0.00, 24.00, value=8.00)
     else:
         sleep_hours = None
 
