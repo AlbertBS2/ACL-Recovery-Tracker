@@ -1,6 +1,14 @@
 import streamlit as st
-from datetime import date, datetime, time
+from datetime import time
 from sqlalchemy import create_engine, text
+import pandas as pd
+
+
+# Create connection string for supabase
+db_url = f"postgresql://{st.secrets['DB_USER']}:{st.secrets['DB_PASS']}@{st.secrets['DB_HOST']}:{st.secrets['DB_PORT']}/{st.secrets['DB_NAME']}"
+
+# Create sqlalchemy engine
+engine = create_engine(db_url)
 
 # Set web app title
 st.title("ACL Recovery Tracker")
@@ -23,6 +31,7 @@ with st.form("daily_log"):
 
     pain = st.slider("Pain level (0-10)", 0, 10)
     #flexion = st.number_input("Extension (degrees)", -10, 0)
+    flexion = None
     swelling = st.select_slider("Swelling level", ["None", "Mild", "Moderate", "Severe"])
     painkillers = st.checkbox("Painkillers")
     rehab_done = st.checkbox("Rehab done")
@@ -32,14 +41,9 @@ with st.form("daily_log"):
 
 if submit:
     with st.spinner("Saving to database..."):
-        # Create connection string for supabase
-        db_url = f"postgresql://{st.secrets['DB_USER']}:{st.secrets['DB_PASS']}@{st.secrets['DB_HOST']}:{st.secrets['DB_PORT']}/{st.secrets['DB_NAME']}"
-
-        # Create sqlalchemy engine
-        engine = create_engine(db_url)
 
         # Define the sql query
-        query = text(
+        insert_query = text(
             f"""
             INSERT INTO logs
             VALUES
@@ -53,7 +57,7 @@ if submit:
             "sleep_hours": sleep_hours,
             "steps_walked": steps_walked,
             "pain": pain,
-            #"flexion": flexion,
+            "flexion": flexion,
             "swelling": swelling,
             "painkillers": painkillers,
             "rehab_done": rehab_done,
@@ -62,7 +66,19 @@ if submit:
         }
 
         with engine.connect() as conn:
-            conn.execute(query, params)
+            conn.execute(insert_query, params)
             conn.commit()
 
         st.write("Saved to database.")
+
+select_query = text(
+    """
+    SELECT *
+    FROM logs
+    """
+)
+
+with engine.connect() as conn:
+    conn.execute(select_query)
+    df = pd.read_sql(select_query, con=conn)
+    st.dataframe(df)
