@@ -13,6 +13,24 @@ engine = create_engine(db_url)
 # Set web app title
 st.title("ACL Recovery Tracker")
 
+## Select user from all existent users
+# Display existent users on the db
+users_query = text(
+    """
+    SELECT user_id, name
+    FROM users
+    """
+)
+
+with engine.connect() as conn:
+    df = pd.read_sql(users_query, con=conn)
+    
+# Dropdown to select user
+selected_user = st.selectbox("Select a user", df['name'], index=0)
+
+# Get selected user id
+selected_user_id = int(df[df['name'] == selected_user]['user_id'].values[0])
+
 log_date = st.date_input("Date")
 log_time = st.time_input("Time")
 
@@ -45,13 +63,23 @@ if submit:
         # Define the sql query
         insert_query = text(
             """
-            INSERT INTO logs (
-            date, time, sleep_hours, steps_walked, pain, flexion,
-            swelling, painkillers, rehab_done, mood, notes
+            INSERT INTO daily_logs (
+                date, sleep_hours, steps_walked, user_id
             )
             VALUES (
-            :date, :time, :sleep_hours, :steps_walked, :pain, :flexion,
-            :swelling, :painkillers, :rehab_done, :mood, :notes
+                :date, :sleep_hours, :steps_walked, :user_id
+            )
+            ON CONFLICT (date, user_id) DO UPDATE SET
+                sleep_hours = COALESCE(EXCLUDED.sleep_hours, daily_logs.sleep_hours),
+                steps_walked = COALESCE(EXCLUDED.steps_walked, daily_logs.steps_walked);
+
+            INSERT INTO periodic_logs (
+                date, time, pain, flexion, swelling, painkillers,
+                rehab_done, mood, notes, user_id
+            )
+            VALUES (
+                :date, :time, :pain, :flexion, :swelling, :painkillers,
+                :rehab_done, :mood, :notes, :user_id
             );
             """
         )
@@ -67,7 +95,10 @@ if submit:
             "painkillers": painkillers,
             "rehab_done": rehab_done,
             "mood": mood,
-            "notes": notes
+            "notes": notes,
+            "sleep_hours": sleep_hours,
+            "steps_walked": steps_walked,
+            "user_id": selected_user_id
         }
 
         with engine.begin() as conn:
@@ -76,13 +107,27 @@ if submit:
         st.write("Saved to database.")
 
 select_query = text(
-    """
-    SELECT *
-    FROM logs
+    f"""
+    SELECT date, time, pain, flexion, swelling, painkillers, rehab_done, mood, notes
+    FROM periodic_logs
+    WHERE user_id = {selected_user_id}
     ORDER BY date, time
     """
 )
 
 with engine.connect() as conn:
     df = pd.read_sql(select_query, con=conn)
+    st.dataframe(df)
+
+select_query2 = text(
+    f"""
+    SELECT date, sleep_hours, steps_walked
+    FROM daily_logs
+    WHERE user_id = {selected_user_id}
+    ORDER BY date
+    """
+)
+
+with engine.connect() as conn:
+    df = pd.read_sql(select_query2, con=conn)
     st.dataframe(df)
