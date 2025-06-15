@@ -16,7 +16,7 @@ with st.form("daily_log"):
     else:
         sleep_hours = None
 
-    if log_time > time(19, 0):
+    if log_time > time(21, 0):
         steps_walked = st.number_input("Steps walked", 0, 100000, value=5000)
     else:
         steps_walked = None
@@ -26,7 +26,7 @@ with st.form("daily_log"):
     swelling = st.select_slider("Swelling level", ["None", "Mild", "Moderate", "Severe"])
     painkillers = st.checkbox("Painkillers")
     rehab_done = st.checkbox("Rehab done")
-    mood = st.select_slider("Mood", ["Happy", "Neutral", "Low"])
+    mood = st.select_slider("Mood", ["Low", "Neutral", "Happy"])
     notes = st.text_area("Notes:")
     submit = st.form_submit_button("Submit")
 
