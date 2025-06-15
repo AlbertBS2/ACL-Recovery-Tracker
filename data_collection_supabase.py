@@ -44,10 +44,15 @@ if submit:
 
         # Define the sql query
         insert_query = text(
-            f"""
-            INSERT INTO logs
-            VALUES
-            (:date, :time, :sleep_hours, :steps_walked, :pain, :flexion, :swelling, :painkillers, :rehab_done, :mood, :notes);
+            """
+            INSERT INTO logs (
+            date, time, sleep_hours, steps_walked, pain, flexion,
+            swelling, painkillers, rehab_done, mood, notes
+            )
+            VALUES (
+            :date, :time, :sleep_hours, :steps_walked, :pain, :flexion,
+            :swelling, :painkillers, :rehab_done, :mood, :notes
+            );
             """
         )
         
@@ -65,9 +70,8 @@ if submit:
             "notes": notes
         }
 
-        with engine.connect() as conn:
-            conn.execute(insert_query, params)
-            conn.commit()
+        with engine.begin() as conn:
+            conn.execute(insert_query, params)  
 
         st.write("Saved to database.")
 
@@ -75,10 +79,10 @@ select_query = text(
     """
     SELECT *
     FROM logs
+    ORDER BY date, time
     """
 )
 
 with engine.connect() as conn:
-    conn.execute(select_query)
     df = pd.read_sql(select_query, con=conn)
     st.dataframe(df)
