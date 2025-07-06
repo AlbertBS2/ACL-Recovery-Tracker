@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import time, datetime, timedelta
 from sqlalchemy import create_engine, text
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 # Create connection string for supabase
@@ -106,6 +107,7 @@ if submit:
 
         st.write("Saved to database.")
 
+# Display table periodic_logs
 select_query = text(
     f"""
     SELECT date, time, pain, flexion, swelling, painkillers, rehab_done, mood, notes
@@ -116,9 +118,10 @@ select_query = text(
 )
 
 with engine.connect() as conn:
-    df = pd.read_sql(select_query, con=conn)
-    st.dataframe(df)
+    df_periodic = pd.read_sql(select_query, con=conn)
+    st.dataframe(df_periodic)
 
+# Display table daily_logs
 select_query2 = text(
     f"""
     SELECT date, sleep_hours, steps_walked
@@ -129,5 +132,24 @@ select_query2 = text(
 )
 
 with engine.connect() as conn:
-    df = pd.read_sql(select_query2, con=conn)
-    st.dataframe(df)
+    df_daily = pd.read_sql(select_query2, con=conn)
+    st.dataframe(df_daily)
+
+# Create and show pain vs days plot
+
+df_periodic_grouped = df_periodic[['date', 'pain']].groupby(['date']).mean()
+
+fig, ax = plt.subplots()
+
+indices = range(df_periodic_grouped.size)
+pain_values = df_periodic_grouped['pain']
+
+ax.bar(indices, pain_values, color='blue')
+ax.bar(indices[1], pain_values.iloc[1], color='red', label='Operation day')
+
+ax.set_title('Pain over days')
+ax.set_ylabel('Pain (0-10)')
+ax.set_xlabel('Days')
+ax.legend()
+
+st.pyplot(fig)
