@@ -3,6 +3,7 @@ from datetime import time, datetime, timedelta
 from sqlalchemy import create_engine, text
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 
 
 # Create connection string for supabase
@@ -137,19 +138,32 @@ with engine.connect() as conn:
 
 # Create and show pain vs days plot
 
-df_periodic_grouped = df_periodic[['date', 'pain']].groupby(['date']).mean()
+#df_periodic_grouped = df_periodic[['date', 'pain']].groupby(['date']).mean()
+df_periodic_grouped = df_periodic.groupby('date').agg(
+    {
+        'pain': 'mean',
+        'painkillers': 'any'
+    }
+)
 
 fig, ax = plt.subplots()
 
-indices = range(df_periodic_grouped.size)
+indices = range(len(df_periodic_grouped))
 pain_values = df_periodic_grouped['pain']
 
-ax.bar(indices, pain_values, color='blue')
-ax.bar(indices[1], pain_values.iloc[1], color='red', label='Operation day')
+colors = ['darkblue' if pk else 'blue' for pk in df_periodic_grouped["painkillers"]]
 
-ax.set_title('Pain over days')
+ax.bar(indices, pain_values, color=colors)
+ax.bar(indices[1], pain_values.iloc[1], color='red')
+
+legend_handles = [
+    Patch(color='red', label='Operation day'),
+    Patch(color='darkblue', label='Painkillers')
+]
+
+ax.set_title('Pain evolution over days')
 ax.set_ylabel('Pain (0-10)')
 ax.set_xlabel('Days')
-ax.legend()
+ax.legend(handles=legend_handles)
 
 st.pyplot(fig)
