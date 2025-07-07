@@ -34,7 +34,7 @@ selected_user = st.selectbox("Select a user", df['name'], index=0)
 selected_user_id = int(df[df['name'] == selected_user]['user_id'].values[0])
 
 log_date = st.date_input("Date")
-log_time = st.time_input("Time", (datetime.now() + timedelta(hours=2)).time())
+log_time = st.time_input("Time")
 
 # Form
 with st.form("daily_log"):
