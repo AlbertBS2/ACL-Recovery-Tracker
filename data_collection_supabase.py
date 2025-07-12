@@ -120,7 +120,7 @@ select_query = text(
 
 with engine.connect() as conn:
     df_periodic = pd.read_sql(select_query, con=conn)
-    st.dataframe(df_periodic)
+    st.dataframe(df_periodic, hide_index=True)
 
 # Display table daily_logs
 select_query2 = text(
@@ -134,7 +134,7 @@ select_query2 = text(
 
 with engine.connect() as conn:
     df_daily = pd.read_sql(select_query2, con=conn)
-    st.dataframe(df_daily)
+    st.dataframe(df_daily, hide_index=True)
 
 # Create and show pain vs days plot
 
